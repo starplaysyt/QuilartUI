@@ -9,11 +9,11 @@ using SDL;
 
 namespace QuilartUI.Services;
 
-public class WindowHandlerService : IQuilartService
+public sealed class WindowHandlerService : IQuilartService
 {
     internal bool IsRunning = true;
-    private Dictionary<nint, UIWindow> WindowEvents { get; set; } = [];
-    private List<UIWindow> Windows { get; set; } = [];
+    private Dictionary<nint, UIWindow> WindowEvents { get; } = [];
+    private List<UIWindow> Windows { get; } = [];
     public static ConsoleLogger Logger { get; } = new("WindowsService");
     
     public void Initialize()
