@@ -4,18 +4,16 @@ using SDL;
 
 namespace QuilartUI.Services;
 
-public sealed class EventPresentingService : IQuilartService
+public sealed class EventPresentingService : QuilartService
 {
     private Dictionary<SDL_EventType, object> EventObjects { get; } = new();
     
-    public static ConsoleLogger Logger { get; } = new(typeof(EventPresentingService));
-    
-    public void Initialize()
+    public override void Initialize()
     {
         throw new NotImplementedException();
     }
 
-    public void Exit()
+    public override void Exit()
     {
         throw new NotImplementedException();
     }

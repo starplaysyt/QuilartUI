@@ -24,7 +24,7 @@ public sealed class UIWindow
         Logger.LogTrace("Creating UIWindow...");
         
         Logger.LogTrace("Getting WindowHandlerService...");
-        Owner = ServiceController.GetOrCreateService<WindowHandlerService>();
+        Owner = ServiceController.Get<WindowHandlerService>();
         
         Logger.LogTrace("Creating SDLWindow...");
         unsafe
@@ -42,13 +42,28 @@ public sealed class UIWindow
 
     internal unsafe void UpdateEvents(SDL_Event* e)
     {
-        if (e->key.key == SDL_Keycode.SDLK_ESCAPE)
-            QuitWindow();
-
-        if (e->key.key == SDL_Keycode.SDLK_RETURN)
+        switch (e->Type)
         {
-            var window = new UIWindow();
+            case SDL_EventType.SDL_EVENT_QUIT:
+                QuitWindow();
+                break;
+            
+            case SDL_EventType.SDL_EVENT_KEY_DOWN:
+                if (e->key.key == SDL_Keycode.SDLK_ESCAPE)
+                    QuitWindow();
+
+                if (e->key.key == SDL_Keycode.SDLK_RETURN)
+                {
+                    var window = new UIWindow();
+                }
+                
+                if (e->key.key == SDL_Keycode.SDLK_Q)
+                    Owner.RequestQuit();
+                break;
+            
         }
+        
+
     }
 
     internal unsafe void RenderWindow()

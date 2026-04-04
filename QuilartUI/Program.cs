@@ -12,7 +12,7 @@ namespace QuilartUI
             LoggingConfiguration.Instance.MinimumLevel = LogLevel.Trace;
             var window = new UIWindow();
 
-            ServiceController.GetOrCreateService<WindowHandlerService>().Run();
+            ServiceController.Get<WindowHandlerService>().Run();
         }
     }
 }

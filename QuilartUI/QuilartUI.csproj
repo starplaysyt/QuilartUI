@@ -17,6 +17,7 @@
 
     <ItemGroup>
       <Folder Include="Assets\Fonts\" />
+      <Folder Include="Interfaces\" />
     </ItemGroup>
 
     <ItemGroup>
