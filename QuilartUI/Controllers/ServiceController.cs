@@ -1,13 +1,13 @@
 using NatLib.Logging;
+using QuilartUI.Abstractions;
 using QuilartUI.Exceptions;
-using QuilartUI.Interfaces;
 
 namespace QuilartUI.Controllers;
 
 public static class ServiceController
 {
     private static readonly Dictionary<Type, QuilartService> Services = new();
-    private static ConsoleLogger Logger { get; } = new("ServiceController");
+    private static ConsoleLogger Logger { get; } = LoggerFactory.Create(typeof(ServiceController));
 
     public static T Get<T>() where T : QuilartService, new()
     {
@@ -29,12 +29,12 @@ public static class ServiceController
     public static void Delete(Type type)
     {
         Logger.LogTrace($"[DELETE] Invoked for {type.FullName}...");
-        
+
         if (!Services.TryGetValue(type, out var service))
             throw new ServiceNotFoundException(type);
-        
+
         service.Exit();
-        
+
         Services.Remove(type);
     }
 
@@ -58,7 +58,7 @@ public static class ServiceController
             Logger.LogTrace($"[EXIT] Invoked for {service.Key}...");
             service.Value.Exit();
         }
-        
+
         Services.Clear();
         Logger.LogTrace($"[DONE] Services exited.");
     }

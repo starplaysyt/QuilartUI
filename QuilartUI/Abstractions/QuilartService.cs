@@ -1,7 +1,6 @@
 using NatLib.Logging;
-using QuilartUI.Events;
 
-namespace QuilartUI.Interfaces;
+namespace QuilartUI.Abstractions;
 
 public abstract class QuilartService
 {
@@ -9,9 +8,9 @@ public abstract class QuilartService
 
     protected QuilartService()
     {
-        Logger = new ConsoleLogger(GetType());
+        Logger = LoggerFactory.Create(GetType());
     }
-    
+
     public abstract void Initialize();
 
     public abstract void Exit();

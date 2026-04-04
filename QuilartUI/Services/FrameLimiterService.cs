@@ -1,4 +1,4 @@
-using QuilartUI.Interfaces;
+using QuilartUI.Abstractions;
 
 namespace QuilartUI.Services;
 
@@ -16,14 +16,14 @@ public class FrameLimiterService : QuilartService
             _targetMs = 1000 / field;
         }
     }
-    
+
     public long LastTicks => _lastTicks;
-    
+
     public long TargetMs => _targetMs;
 
     private long _lastTicks;
     private long _targetMs;
-    
+
     public override void Initialize()
     {
         TargetFrameRate = 60;
@@ -34,7 +34,7 @@ public class FrameLimiterService : QuilartService
     {
         var elapsed = Environment.TickCount64 - _lastTicks;
         var sleep = Convert.ToInt32(_targetMs - elapsed);
-        
+
         if (sleep > 0) Thread.Sleep(sleep);
 
         _lastTicks = Environment.TickCount64;

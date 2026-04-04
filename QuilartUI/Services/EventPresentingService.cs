@@ -1,5 +1,5 @@
 using NatLib.Logging;
-using QuilartUI.Interfaces;
+using QuilartUI.Abstractions;
 using SDL;
 
 namespace QuilartUI.Services;
@@ -7,7 +7,7 @@ namespace QuilartUI.Services;
 public sealed class EventPresentingService : QuilartService
 {
     private Dictionary<SDL_EventType, object> EventObjects { get; } = new();
-    
+
     public override void Initialize()
     {
         throw new NotImplementedException();

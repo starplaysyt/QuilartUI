@@ -42,13 +42,10 @@ public sealed class GraphicsRenderer
             {
                 fixed (int* indices = indexArray)
                 {
-                    SDL_RenderGeometry(Renderer, null, (SDL_Vertex*)vertices, vertexArray.Length, indices, indexArray.Length);
+                    SDL_RenderGeometry(Renderer, null, (SDL_Vertex*)vertices, vertexArray.Length, indices,
+                        indexArray.Length);
                 }
             }
         }
     }
-    
-    
-    
-    
 }
