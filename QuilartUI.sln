@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuilartUI", "QuilartUI\QuilartUI.csproj", "{6352E8BB-6305-48E8-8FE2-656F0F905DB4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuilartUI", "QuilartUI.csproj", "{6352E8BB-6305-48E8-8FE2-656F0F905DB4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
