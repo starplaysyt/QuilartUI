@@ -29,8 +29,16 @@ public sealed class GraphicsRenderer
         unsafe
         {
             Renderer = SDL_CreateRenderer((SDL_Window*)window.WindowPtr, (byte*)null);
+
+            SDL_SetRenderDrawBlendMode(Renderer, SDL_BlendMode.SDL_BLENDMODE_BLEND);
+
+            SDL_SetRenderVSync(Renderer, 30);
         }
     }
+    
+    public unsafe void RenderClear() => SDL_RenderClear(Renderer);
+    
+    public unsafe void RenderPresent() => SDL_RenderPresent(Renderer);
 
     public void DrawGeometryShape(GeometryShape shape)
     {

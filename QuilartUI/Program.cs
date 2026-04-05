@@ -11,8 +11,6 @@ namespace QuilartUI
         {
             LoggingConfiguration.Instance.MinimumLevel = LogLevel.Trace;
             var window = new UIWindow();
-            
-            ConsoleLogger.Instance.LogTrace($"{LoggerFactory.LoggersCount}");
 
             ServiceController.Get<WindowHandlerService>().Run();
         }

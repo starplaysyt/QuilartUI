@@ -1,4 +1,5 @@
 using NatLib.Logging;
+using NatLib.Core.Structures;
 using QuilartUI.Controllers;
 using QuilartUI.Extensions;
 using QuilartUI.Graphics;
@@ -21,6 +22,10 @@ public sealed class UIWindow
     private WindowHandlerService Owner { get; }
 
     public GraphicsRenderer Renderer { get; }
+    
+    //TODO: Debug only element
+    public GeometryShape DrawingShape { get; }
+    public GeometryShape DrawingShape2 { get; }
 
     public UIWindow()
     {
@@ -45,6 +50,18 @@ public sealed class UIWindow
         Logger.LogTrace("Creating renderer...");
         Renderer = new GraphicsRenderer(this);
 
+        //TODO: Debug only element
+        DrawingShape = GeometryShape.CreateCircle(
+            new Point2(300, 300),
+            Color.White,
+            80,
+            32);
+
+        DrawingShape2 = GeometryShape.CreateCircle(
+            new Point2(300, 300),
+            Color.Magenta,
+            100,
+            32);
 
         Logger.LogTrace("UIWindow created successfully.");
     }
@@ -74,6 +91,10 @@ public sealed class UIWindow
 
     internal unsafe void RenderWindow()
     {
+        Renderer.RenderClear();  
+        Renderer.DrawGeometryShape(DrawingShape2);
+        Renderer.DrawGeometryShape(DrawingShape);
+        Renderer.RenderPresent();
     }
 
     public void QuitWindow()
