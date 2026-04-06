@@ -11,6 +11,7 @@ public sealed class GraphicsRenderer
 
     internal unsafe nint RendererPtr => (nint)Renderer;
 
+
     public Color RendererColor
     {
         get;
@@ -35,9 +36,9 @@ public sealed class GraphicsRenderer
             SDL_SetRenderVSync(Renderer, 30);
         }
     }
-    
+
     public unsafe void RenderClear() => SDL_RenderClear(Renderer);
-    
+
     public unsafe void RenderPresent() => SDL_RenderPresent(Renderer);
 
     public void DrawGeometryShape(GeometryShape shape)
@@ -46,14 +47,9 @@ public sealed class GraphicsRenderer
         var indexArray = shape.IndexArray;
         unsafe
         {
-            fixed (Vertex* vertices = vertexArray)
-            {
-                fixed (int* indices = indexArray)
-                {
-                    SDL_RenderGeometry(Renderer, null, (SDL_Vertex*)vertices, vertexArray.Length, indices,
-                        indexArray.Length);
-                }
-            }
+            SDL_RenderGeometry(Renderer, null,
+                (SDL_Vertex*)vertexArray.AsPointer(), vertexArray.Length,
+                indexArray.AsPointer(), indexArray.Length);
         }
     }
 }

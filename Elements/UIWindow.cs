@@ -22,7 +22,7 @@ public sealed class UIWindow
     private WindowHandlerService Owner { get; }
 
     public GraphicsRenderer Renderer { get; }
-    
+
     //TODO: Debug only element
     public GeometryShape DrawingShape { get; }
     public GeometryShape DrawingShape2 { get; }
@@ -51,17 +51,17 @@ public sealed class UIWindow
         Renderer = new GraphicsRenderer(this);
 
         //TODO: Debug only element
-        DrawingShape = GeometryShape.CreateCircle(
-            new Point2(300, 300),
+        DrawingShape = GeometryShape.CreateRoundedRectangle(
+            new Point2(100, 100),
+            new Size2(200, 400),
             Color.White,
-            80,
-            32);
+            50);
 
+        var circleColor = Color.Magenta;
         DrawingShape2 = GeometryShape.CreateCircle(
             new Point2(300, 300),
-            Color.Magenta,
-            100,
-            32);
+            circleColor.WithAlpha(0.5f),
+            100);
 
         Logger.LogTrace("UIWindow created successfully.");
     }
@@ -91,9 +91,9 @@ public sealed class UIWindow
 
     internal unsafe void RenderWindow()
     {
-        Renderer.RenderClear();  
-        Renderer.DrawGeometryShape(DrawingShape2);
+        Renderer.RenderClear();
         Renderer.DrawGeometryShape(DrawingShape);
+        Renderer.DrawGeometryShape(DrawingShape2);
         Renderer.RenderPresent();
     }
 
