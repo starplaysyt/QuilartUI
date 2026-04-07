@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using NatLib.Arrays;
 using NatLib.Core.Structures;
@@ -14,26 +12,43 @@ public sealed class GeometryShape
 
     public List<VertexGroup> VertexGroups { get; private set; } = [];
 
-    public GeometryShape()
+    public GeometryShape(int vertexCount, int indexCount)
     {
         VertexArray = new PointerArray<Vertex>();
         IndexArray = new PointerArray<int>();
+        
+        VertexArray.Allocate(vertexCount);
+        IndexArray.Allocate(indexCount);
+    }
+
+    public unsafe int* AllocateIndex(int indexLength)
+    {
+        IndexArray.Resize(IndexArray.Length + indexLength);
+        return IndexArray.GetPtr(IndexArray.Length - indexLength);
+    }
+
+    public unsafe Vertex* AllocateVertex(int vertexLength)
+    {
+        VertexArray.Resize(VertexArray.Length + vertexLength);
+        return VertexArray.GetPtr(VertexArray.Length - vertexLength);
     }
 
     public VertexGroup AddVertexGroup(int verticesCount)
     {
-        var startVertex = VertexArray.Length;
-        var startIndex = IndexArray.Length;
+        // var startVertex = VertexArray.Length;
+        // var startIndex = IndexArray.Length;
+        //
+        // // VertexArray.Resize(group.VerticesCount);
+        // // IndexArray.Resize(group.VerticesCount);
+        //
+        //
+        // var group = new VertexGroup(this, verticesCount, null, null);
+        //
+        // VertexGroups.Add(group);
+        //
+        // return group;
 
-        // VertexArray.Resize(group.VerticesCount);
-        // IndexArray.Resize(group.VerticesCount);
-
-
-        var group = new VertexGroup(this, verticesCount, null, null);
-
-        VertexGroups.Add(group);
-
-        return group;
+        return null;
     }
 
     ~GeometryShape()
@@ -44,7 +59,7 @@ public sealed class GeometryShape
 
     public const float FeatheringThickness = 0.8f;
 
-    public static int GetIndicesLength(int vertsCount) => 3 * (vertsCount - 2);
+
 
     public static Point2 GetCirclePoint(int index, float radius, int quality)
     {
@@ -185,33 +200,36 @@ public sealed class GeometryShape
         }
     }
 
+    public static int GetIndicesLength(int vertCount) => 3 * (vertCount - 2);
 
     public static GeometryShape CreateCircle(Point2 location, Color color, int radius)
     {
-        const int quality = 33;
-        var shape = new GeometryShape();
-
-        var mainGroup = shape.AddVertexGroup(quality);
-
-        GenerateCircle(mainGroup.GetVertexArea(), color, location, radius, quality);
-
-
-        // //quality = 5, vertices = 12
-        // var quality = 32;
-        // var indicesFanCount = GetIndicesLength(quality);
-        // var indicesStripCount = GetIndicesLength(quality * 2) + 6;
-        // var verticesCount = quality * 2 + 2;
-        // // * 2 - feathering cycle around base vertices,
-        // // + 2 - strip end vertices(to make feathering logically connected
+        // const int quality = 33;
+        // var shape = new GeometryShape();
         //
-        // var shape = new GeometryShape(verticesCount, indicesFanCount + indicesStripCount);
+        // var mainGroup = shape.AddVertexGroup(quality);
         //
-        // GenerateCircle(shape.VertexArray.AsSpan(), color, location, radius, quality);
-        // FillTriangleFan(shape.IndexArray.AsSpan(), quality);
-        // GenerateCircleFeathering(shape.VertexArray.AsSpan()[(quality + 1)..], color, location, radius, quality);
-        // FillTriangleStripAlign(shape.IndexArray.AsSpan()[indicesFanCount..], verticesCount);
-        //
-        // return shape;
+        // GenerateCircle(mainGroup.GetVertexArea(), color, location, radius, quality);
+
+
+        //quality = 5, vertices = 12
+        var quality = 32;
+        var indicesFanCount = GetIndicesLength(quality);
+        var indicesStripCount = GetIndicesLength(quality * 2) + 6;
+        var verticesCount = quality * 2 + 2;
+        // * 2 - feathering cycle around base vertices,
+        // + 2 - strip end vertices(to make feathering logically connected
+        
+        var shape = new GeometryShape(verticesCount, indicesFanCount + indicesStripCount);
+        
+        GenerateCircle(shape.VertexArray.AsSpan(), color, location, radius, quality);
+        FillTriangleFan(shape.IndexArray.AsSpan(), quality);
+        GenerateCircleFeathering(shape.VertexArray.AsSpan()[(quality + 1)..], color, location, radius, quality);
+        FillTriangleStripAlign(shape.IndexArray.AsSpan()[indicesFanCount..], verticesCount);
+        
+        return shape;
+
+        return null;
     }
 
     public static GeometryShape CreateRoundedRectangle(Point2 location, Size2 size, Color color, int radius)
