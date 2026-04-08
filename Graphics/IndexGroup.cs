@@ -1,8 +1,10 @@
+using NatLib.Logging;
+
 namespace QuilartUI.Graphics;
 
 public class IndexGroup
 {
-    public unsafe int* StartIndex { get; set; } = null;
+    public int StartIndex { get; set; } = 0;
 
     public int Length { get; set; } = 0;
 
@@ -15,23 +17,31 @@ public class IndexGroup
         Owner = owner;
     }
 
-    public void ConnectSelfFan(int vertIndex, int vertLength)
+    public static IndexGroup ConnectSelfFan(GeometryShape owner, VertexGroup vertGroup1)
     {
-        var indexCount = GetIndexCount(vertLength);
-        Length = indexCount;
+        var logger = LoggerFactory.Create("ConnectSelfFan");
+        logger.LogTrace($"Connecting self-fan for vertex group: {vertGroup1.StartIndex}, {vertGroup1.Length}");
+        var indexGroup = new IndexGroup(owner);
+        var indexCount = GetIndexCount(vertGroup1.Length);
+        
+        indexGroup.Length = indexCount;
+        
+        Span<int> indices = stackalloc int[indexCount];
 
         unsafe
         {
-            var startIndex = Owner.AllocateIndex(indexCount);
-            StartIndex = startIndex;
-
-            for (var i = 0; i < vertLength - 2; i++)
+            for (var i = 0; i < vertGroup1.Length - 2; i++)
             {
-                startIndex[i * 3] = vertIndex;
-                startIndex[i * 3 + 1] = vertIndex + i + 1;
-                startIndex[i * 3 + 2] = vertIndex + i + 2;
+                indices[i * 3] = vertGroup1.StartIndex;
+                indices[i * 3 + 1] = vertGroup1.StartIndex + i + 1;
+                indices[i * 3 + 2] = vertGroup1.StartIndex + i + 2;
             }
         }
+        
+        indexGroup.StartIndex = owner.IndexArray.Length;
+        owner.IndexArray.AddSeveral(indices);
+
+        return indexGroup;
     }
 
     public void ConnectSelfStrip(int vertIndex, int vertLength)
@@ -41,8 +51,8 @@ public class IndexGroup
 
         unsafe
         {
-            var startIndex = Owner.AllocateIndex(indexCount);
-            StartIndex = startIndex;
+            Span<int> startIndex = Span<int>.Empty;// Owner.AllocateIndex(indexCount);
+            // StartIndex = startIndex;
             
             for (var i = 0; i < vertLength - 2; i++)
             {
@@ -64,22 +74,22 @@ public class IndexGroup
 
     public void ConnectStrip(int firstIndex, int firstLength, int secondIndex, int secondLength)
     {
-        var length = int.Min(firstLength, secondLength);
-        var lastIndex = 0;
-        
-        unsafe
-        {
-            var pointer = StartIndex;
-            for (var i = 0; i < length - 1; i++)
-            {
-                pointer[lastIndex++] = firstIndex + i;
-                pointer[lastIndex++] = firstIndex + i + 1;
-                pointer[lastIndex++] = secondIndex + i + 1;
-
-                pointer[lastIndex++] = secondIndex + i;
-                pointer[lastIndex++] = firstIndex + i;
-                pointer[lastIndex++] = secondIndex + i + 1;
-            }
-        }
+        // var length = int.Min(firstLength, secondLength);
+        // var lastIndex = 0;
+        //
+        // unsafe
+        // {
+        //     var pointer = StartIndex;
+        //     for (var i = 0; i < length - 1; i++)
+        //     {
+        //         pointer[lastIndex++] = firstIndex + i;
+        //         pointer[lastIndex++] = firstIndex + i + 1;
+        //         pointer[lastIndex++] = secondIndex + i + 1;
+        //
+        //         pointer[lastIndex++] = secondIndex + i;
+        //         pointer[lastIndex++] = firstIndex + i;
+        //         pointer[lastIndex++] = secondIndex + i + 1;
+        //     }
+        // }
     }
 }

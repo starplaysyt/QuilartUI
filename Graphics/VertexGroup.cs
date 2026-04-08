@@ -6,28 +6,40 @@ namespace QuilartUI.Graphics;
 
 public class VertexGroup
 {
-    public unsafe Vertex* ZeroVertex { get; private set; }
-    public unsafe int* ZeroIndex { get; private set; }
+    public int StartIndex { get; private set; } = 0;
 
-    public int VerticesCount { get; private set; }
-    public int IndicesCount { get; private set; }
+    public int Length { get; private set; } = 0;
 
     public GeometryShape Owner { get; private set; }
 
-    public unsafe VertexGroup(GeometryShape owner, int verticesCount, Vertex* zeroVertexId, int* zereIndexId)
+    public unsafe VertexGroup(GeometryShape owner)
     {
-        VerticesCount = verticesCount;
-        IndicesCount = 3 * (verticesCount - 2);
-
-        ZeroVertex = zeroVertexId;
-        ZeroIndex = zereIndexId;
+        Owner = owner;
     }
 
-    public unsafe Span<Vertex> GetVertexArea() => new(ZeroVertex, VerticesCount);
-
-    public unsafe Span<int> GetIndexArea() => new(ZeroIndex, IndicesCount);
-
-    public static void ConnectSelfFan(VertexGroup group)
+    public static VertexGroup CreateCircle(GeometryShape owner, Point2 location, Color color, int radius)
     {
+        var group = new VertexGroup(owner);
+        var quality = (int)(radius * 0.8f);
+        var da = 2.0f * MathF.PI / quality;
+        
+        var startIndex = owner.VertexArray.Length;
+        Span<Vertex> pointer = stackalloc Vertex[quality + 1];
+        
+        group.StartIndex = startIndex;
+        group.Length = quality;
+        
+        for (var i = 0; i <= quality; i++)
+        {
+            var angle = da * i;
+            pointer[i].Position = new Point2(
+                location.X + radius * MathF.Cos(angle),
+                location.Y + radius * MathF.Sin(angle));
+            pointer[i].Color = color;
+        }
+        
+        owner.VertexArray.AddSeveral(pointer);
+
+        return group;
     }
 }

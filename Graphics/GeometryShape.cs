@@ -1,38 +1,32 @@
 using System.Text;
 using NatLib.Arrays;
 using NatLib.Core.Structures;
+using NatLib.Logging;
 
 namespace QuilartUI.Graphics;
 
 public sealed class GeometryShape
 {
-    public PointerArray<Vertex> VertexArray { get; set; }
+    private static ConsoleLogger Logger { get; } = LoggerFactory.Create<GeometryShape>();
+    public PointerList<Vertex> VertexArray { get; set; }
 
-    public PointerArray<int> IndexArray { get; set; }
+    public PointerList<int> IndexArray { get; set; }
 
     public List<VertexGroup> VertexGroups { get; private set; } = [];
 
     public GeometryShape(int vertexCount, int indexCount)
     {
-        VertexArray = new PointerArray<Vertex>();
-        IndexArray = new PointerArray<int>();
-        
-        VertexArray.Allocate(vertexCount);
-        IndexArray.Allocate(indexCount);
+        VertexArray = new PointerList<Vertex>(vertexCount);
+        IndexArray = new PointerList<int>(indexCount);
     }
 
-    public unsafe int* AllocateIndex(int indexLength)
+    public GeometryShape()
     {
-        IndexArray.Resize(IndexArray.Length + indexLength);
-        return IndexArray.GetPtr(IndexArray.Length - indexLength);
+        Logger.LogTrace("Creating new geometry shape...");
+        VertexArray = new();
+        IndexArray = new();
     }
-
-    public unsafe Vertex* AllocateVertex(int vertexLength)
-    {
-        VertexArray.Resize(VertexArray.Length + vertexLength);
-        return VertexArray.GetPtr(VertexArray.Length - vertexLength);
-    }
-
+    
     public VertexGroup AddVertexGroup(int verticesCount)
     {
         // var startVertex = VertexArray.Length;
@@ -68,47 +62,35 @@ public sealed class GeometryShape
         return radius * new Point2(MathF.Cos(angle), MathF.Sin(angle));
     }
 
-    public static Point2 GetRoundedRectanglePoint(int index, Size2 size, float radius, int quality)
-    {
-        Console.WriteLine("Got rounded rect for index: " + index + " quality: " + quality);
+    // public static Point2 GetRoundedRectanglePoint(int index, Size2 size, float radius, int quality)
+    // {
+    //     Console.WriteLine("Got rounded rect for index: " + index + " quality: " + quality);
+    //
+    //     return 
+    // }
 
-        Span<Point2> centersSpan = stackalloc Point2[5];
-        centersSpan[0] = new Point2(size.Width - radius, size.Height - radius);
-        centersSpan[1] = new Point2(radius, size.Height - radius);
-        centersSpan[2] = new Point2(radius, radius);
-        centersSpan[3] = new Point2(size.Width - radius, radius);
-        centersSpan[4] = new Point2(size.Width - radius, size.Height - radius);
-
-        var arcQuality = quality / 4;
-
-        var cornerIdx = index / arcQuality;
-
-        return centersSpan[cornerIdx] + GetCirclePoint(index - cornerIdx, radius, quality - 4);
-    }
-
-    public static Point2 GetRoundedRectanglePointFeathering(int index, Size2 size, float radius, int quality)
-    {
-        Span<Point2> centersSpan = stackalloc Point2[5];
-        centersSpan[0] = new Point2(size.Width - radius, size.Height - radius);
-        centersSpan[1] = new Point2(radius, size.Height - radius);
-        centersSpan[2] = new Point2(radius, radius);
-        centersSpan[3] = new Point2(size.Width - radius, radius);
-        centersSpan[4] = new Point2(size.Width - radius, size.Height - radius);
-
-        var arcQuality = quality / 4;
-
-        var cornerIdx = index / arcQuality;
-
-        return centersSpan[cornerIdx] + GetCirclePoint(index - cornerIdx, radius + FeatheringThickness, quality - 4);
-    }
+    // public static Point2 GetRoundedRectanglePointFeathering(int index, Size2 size, float radius, int quality)
+    // {
+    //
+    // }
 
     public static void GenerateRoundedRectangle(Span<Vertex> vertices, Point2 position, Size2 size, Color color,
         float radius,
         int quality)
     {
-        for (int i = 0; i <= quality; i++)
+        Span<Point2> centersSpan = stackalloc Point2[5];
+        centersSpan[0] = new Point2(size.Width - radius, size.Height - radius);
+        centersSpan[1] = new Point2(radius, size.Height - radius);
+        centersSpan[2] = new Point2(radius, radius);
+        centersSpan[3] = new Point2(size.Width - radius, radius);
+        centersSpan[4] = new Point2(size.Width - radius, size.Height - radius);
+        
+        var arcQuality = quality / 4;
+        
+        for (var i = 0; i <= quality; i++)
         {
-            vertices[i].Position = position + GetRoundedRectanglePoint(i, size, radius, quality);
+            var cornerIdx = i / arcQuality;
+            vertices[i].Position = position + centersSpan[cornerIdx] + GetCirclePoint(i - cornerIdx, radius, quality - 4);
             vertices[i].Color = color;
         }
     }
@@ -117,9 +99,22 @@ public sealed class GeometryShape
         Color color, float radius,
         int quality)
     {
+        Span<Point2> centersSpan = stackalloc Point2[5];
+        centersSpan[0] = new Point2(size.Width - radius, size.Height - radius);
+        centersSpan[1] = new Point2(radius, size.Height - radius);
+        centersSpan[2] = new Point2(radius, radius);
+        centersSpan[3] = new Point2(size.Width - radius, radius);
+        centersSpan[4] = new Point2(size.Width - radius, size.Height - radius);
+        
+        var arcQuality = quality / 4;
+        
         for (var i = 0; i <= quality; i++)
         {
-            vertices[i].Position = position + GetRoundedRectanglePointFeathering(i, size, radius, quality);
+            var cornerIdx = i / arcQuality;
+            
+            vertices[i].Position = position 
+                                   + centersSpan[cornerIdx] 
+                                   + GetCirclePoint(i - cornerIdx, radius + FeatheringThickness, quality - 4);
             vertices[i].Color = color.WithAlpha(0);
         }
     }
@@ -202,6 +197,30 @@ public sealed class GeometryShape
 
     public static int GetIndicesLength(int vertCount) => 3 * (vertCount - 2);
 
+    public static GeometryShape CreateComplexShape(Point2 location, Color color, int radius)
+    {
+        Logger.LogTrace("Creating complex shape...");
+        var geomShape = new GeometryShape();
+        
+        Logger.LogTrace("Creating vertex groups...");
+        var vertGroup1 = VertexGroup.CreateCircle(geomShape, location - new Point2(50, 50), color.WithR(0.8f).WithAlpha(0.5f), radius);
+        var vertGroup2 = VertexGroup.CreateCircle(geomShape, location + new Point2(50, 50), color.WithR(0.1f).WithAlpha(0.5f), radius);
+        var vertGroup3 = VertexGroup.CreateCircle(geomShape, location + new Point2(0, 50), color.WithR(0.9f).WithAlpha(0.5f), radius);
+        
+        geomShape.VertexGroups.Add(vertGroup1);
+        geomShape.VertexGroups.Add(vertGroup2);
+        geomShape.VertexGroups.Add(vertGroup3);
+        
+        Logger.LogTrace("Creating index groups...");
+        
+        var indexGroup1 = IndexGroup.ConnectSelfFan(geomShape, vertGroup1);
+        var indexGroup2 = IndexGroup.ConnectSelfFan(geomShape, vertGroup2);
+        var indexGroup3 = IndexGroup.ConnectSelfFan(geomShape, vertGroup3);
+        
+        return geomShape;
+    }
+    
+    
     public static GeometryShape CreateCircle(Point2 location, Color color, int radius)
     {
         // const int quality = 33;
