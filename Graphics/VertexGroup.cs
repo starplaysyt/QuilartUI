@@ -39,10 +39,11 @@ public class VertexGroup
         }
         
         owner.VertexArray.AddSeveral(pointer);
+        owner.VertexGroups.Add(group);
         return group;
     }
-
-    public static VertexGroup CreateRoundedRectangle(GeometryShape owner, Point2 location, Size2 size, Color color, int radius)
+    
+    public static VertexGroup CreateRoundedRectangle(GeometryShape owner, Point2 location, Size2 size, Color color, float radius)
     {
         var group = new VertexGroup(owner);
         const int quality = 32;
@@ -74,6 +75,7 @@ public class VertexGroup
         }
 
         owner.VertexArray.AddSeveral(pointer);
+        owner.VertexGroups.Add(group);
         return group;
     }
 }

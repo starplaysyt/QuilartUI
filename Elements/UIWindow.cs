@@ -39,7 +39,7 @@ public sealed class UIWindow
         Logger.LogTrace("Creating SDLWindow...");
         unsafe
         {
-            SDLWindow = Logger.LogSDLIfNullPtr(SDL_CreateWindow("Quilart Window", 700, 300,
+            SDLWindow = Logger.LogSDLIfNullPtr(SDL_CreateWindow("Quilart Window", 1200, 700,
                 SDL_WindowFlags.SDL_WINDOW_RESIZABLE | SDL_WindowFlags.SDL_WINDOW_HIGH_PIXEL_DENSITY));
             Id = (uint)SDL_GetWindowID(SDLWindow);
         }
@@ -56,8 +56,21 @@ public sealed class UIWindow
         //     new Size2(200, 400),
         //     Color.White,
         //     50);
+        
+        Renderer.RendererColor = Color.FromHex("2c2c2c");
 
-        DrawingShape = GeometryShape.CreateComplexShape(new Point2(300, 300), new Color(0.2f, 0.9f, 0.2f, 0.5f), 90);
+
+        var color1 = Color.FromHex("f8af40");
+        var color2 = Color.FromHex("1c323c");
+
+        DrawingShape =
+            GeometryShape.CreateRectangleBackgroundShaded(new Point2(200, 200), new Size2(600, 500), color2, color1, 20, 20); 
+            
+        //GeometryShape.CreateRectangleOutline(new Point2(200, 200), new Size2(600, 500), color1, 20, 20); 
+            
+        //GeometryShape.CreateRectangle(new Point2(200, 200), new Size2(200, 100), color2, 20);
+            
+        //GeometryShape.CreateCircleBackground(new Point2(300, 300), color1.WithAlpha(0.6f), color2.WithAlpha(0.6f), 200, 10);
 
         // var circleColor = Color.Magenta;
         // DrawingShape2 = GeometryShape.CreateCircle(

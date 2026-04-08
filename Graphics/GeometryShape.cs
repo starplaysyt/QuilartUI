@@ -55,8 +55,6 @@ public sealed class GeometryShape
 
     public const float FeatheringThickness = 0.8f;
 
-
-
     public static Point2 GetCirclePoint(int index, float radius, int quality)
     {
         var da = 2.0f * MathF.PI / quality;
@@ -210,15 +208,176 @@ public sealed class GeometryShape
         var geomShape = new GeometryShape();
 
         var circleBody = VertexGroup.CreateCircle(geomShape, center, color, radius);
-        
-        geomShape.VertexGroups.Add(circleBody);
+        var feathering = VertexGroup.CreateCircle(geomShape, center, color.WithAlpha(0), radius + 0.5f);
 
-        var circleFill = IndexGroup.ConnectSelfFan(geomShape, circleBody);
-        
-        geomShape.IndexGroups.Add(circleFill);
+        IndexGroup.ConnectSelfFan(geomShape, circleBody);
+        IndexGroup.ConnectStrip(geomShape, circleBody, feathering);
         
         return geomShape;
     }
+
+    public static GeometryShape CreateCircleOutline(Point2 center, Color color, float radius, float outlineWidth)
+    {
+        Logger.LogTrace("Creating circle with outline shape...");
+        var geomShape = new GeometryShape();
+        var outlineFactor = outlineWidth / 2;
+        
+        var circleInner = VertexGroup.CreateCircle(geomShape, center, color, radius - outlineFactor);
+        var circleOuter = VertexGroup.CreateCircle(geomShape, center, color, radius + outlineFactor);
+        var circleFeatheringInner =
+            VertexGroup.CreateCircle(geomShape, center, color.WithAlpha(0), radius - outlineFactor - 1f);
+        var circleFeatheringOuter =
+            VertexGroup.CreateCircle(geomShape, center, color.WithAlpha(0), radius + outlineFactor + 1f);
+
+        IndexGroup.ConnectStrip(geomShape, circleInner, circleOuter);
+        IndexGroup.ConnectStrip(geomShape, circleInner, circleFeatheringInner);
+        IndexGroup.ConnectStrip(geomShape, circleOuter, circleFeatheringOuter);
+        
+        return geomShape;
+    }
+
+    public static GeometryShape CreateCircleBackground(Point2 center, Color backColor, Color foreColor, float radius,
+        float outlineWidth)
+    {
+        Logger.LogTrace("Creating circle with background shape...");
+        var geomShape = new GeometryShape();
+        var outlineFactor = outlineWidth / 2;
+        
+        var circleBody = VertexGroup.CreateCircle(geomShape, center, backColor, radius);
+        
+        var circleInner = VertexGroup.CreateCircle(geomShape, center, foreColor, radius - outlineFactor);
+        var circleOuter = VertexGroup.CreateCircle(geomShape, center, foreColor, radius + outlineFactor);
+        var circleFeatheringInner =
+            VertexGroup.CreateCircle(geomShape, center, foreColor.WithAlpha(0), radius - outlineFactor - 1f);
+        var circleFeatheringOuter =
+            VertexGroup.CreateCircle(geomShape, center, foreColor.WithAlpha(0), radius + outlineFactor + 1f);
+
+        IndexGroup.ConnectSelfFan(geomShape, circleBody);
+        IndexGroup.ConnectStrip(geomShape, circleInner, circleOuter);
+        IndexGroup.ConnectStrip(geomShape, circleInner, circleFeatheringInner);
+        IndexGroup.ConnectStrip(geomShape, circleOuter, circleFeatheringOuter);
+        
+        return geomShape;
+    }
+
+    public static GeometryShape CreateRectangle(Point2 location, Size2 size, Color color, float radius)
+    {
+        Logger.LogTrace("Creating rectangle shape...");
+        var geomShape = new GeometryShape();
+        
+        var rectBody = VertexGroup.CreateRoundedRectangle(geomShape, location, size, color, radius);
+        var rectFeathering = VertexGroup.CreateRoundedRectangle(geomShape, location - 1, size + 2, color.WithAlpha(0), radius);
+        
+        IndexGroup.ConnectSelfFan(geomShape, rectBody);
+        IndexGroup.ConnectStrip(geomShape, rectBody, rectFeathering);
+        
+        return geomShape;
+    }
+
+    public static GeometryShape CreateRectangleOutline(Point2 location, Size2 size, Color color, float radius,
+        float outlineWidth)
+    {
+        Logger.LogTrace("Creating rectangle with outline shape...");
+        var geomShape = new GeometryShape();
+        
+        var outlineFactor = outlineWidth / 2;
+        
+        var rectInner = VertexGroup.CreateRoundedRectangle(geomShape, location + outlineFactor, 
+            size - outlineFactor * 2, color, radius - outlineFactor);
+        var rectOuter = VertexGroup.CreateRoundedRectangle(geomShape, location - outlineFactor,
+            size + outlineFactor * 2, color, radius + outlineFactor);
+        
+        var rectFeatheringInner =
+            VertexGroup.CreateRoundedRectangle(geomShape, location + outlineFactor + 1, 
+                size - outlineFactor * 2 - 2, color.WithAlpha(0), radius - outlineFactor);
+        var rectFeatheringOuter =
+            VertexGroup.CreateRoundedRectangle(geomShape, location - outlineFactor - 1,
+                size + outlineFactor * 2 + 2, color.WithAlpha(0), radius + outlineFactor);
+        
+        IndexGroup.ConnectStrip(geomShape, rectInner, rectOuter);
+        IndexGroup.ConnectStrip(geomShape, rectInner, rectFeatheringInner);
+        IndexGroup.ConnectStrip(geomShape, rectOuter, rectFeatheringOuter);
+        
+        return geomShape;
+    }
+    
+    public static GeometryShape CreateRectangleBackground(Point2 location, Size2 size, Color backColor, Color foreColor, float radius,
+        float outlineWidth)
+    {
+        Logger.LogTrace("Creating rectangle with outline shape...");
+        var geomShape = new GeometryShape();
+        
+        var outlineFactor = outlineWidth / 2;
+        
+        var rectBody = VertexGroup.CreateRoundedRectangle(geomShape, location, size, backColor, radius);
+        
+        var rectInner = VertexGroup.CreateRoundedRectangle(geomShape, location + outlineFactor, 
+            size - outlineFactor * 2, foreColor, radius - outlineFactor);
+        var rectOuter = VertexGroup.CreateRoundedRectangle(geomShape, location - outlineFactor,
+            size + outlineFactor * 2, foreColor, radius + outlineFactor);
+        
+        var rectFeatheringInner =
+            VertexGroup.CreateRoundedRectangle(geomShape, location + outlineFactor + 1, 
+                size - outlineFactor * 2 - 2, foreColor.WithAlpha(0), radius - outlineFactor);
+        var rectFeatheringOuter =
+            VertexGroup.CreateRoundedRectangle(geomShape, location - outlineFactor - 1,
+                size + outlineFactor * 2 + 2, foreColor.WithAlpha(0), radius + outlineFactor);
+        
+        IndexGroup.ConnectSelfFan(geomShape, rectBody);
+        IndexGroup.ConnectStrip(geomShape, rectInner, rectOuter);
+        IndexGroup.ConnectStrip(geomShape, rectInner, rectFeatheringInner);
+        IndexGroup.ConnectStrip(geomShape, rectOuter, rectFeatheringOuter);
+        
+        return geomShape;
+    }
+
+    public static GeometryShape CreateRectangleBackgroundShaded(Point2 location, Size2 size, Color backColor,
+        Color foreColor, float radius,
+        float outlineWidth)
+    {
+        Logger.LogTrace("Creating rectangle with background and shade shape...");
+        var geomShape = new GeometryShape();
+        
+        var outlineFactor = outlineWidth / 2;
+
+        var outerShadeLocation = new Point2(
+            location.X - outlineWidth, location.Y);
+
+        var innerShadeLocation = new Point2(
+            location.X, location.Y + 25); 
+        
+        var rectShadeOuter =
+            VertexGroup.CreateRoundedRectangle(geomShape, outerShadeLocation, size + outlineWidth*2, Color.FromHex("00000000"),
+                radius + 15);
+        
+        var rectShadeInner = VertexGroup.CreateRoundedRectangle(geomShape, innerShadeLocation, size, Color.FromHex("00000025"), radius);
+        
+        var rectBody = VertexGroup.CreateRoundedRectangle(geomShape, location, size, backColor, radius);
+        
+        var rectInner = VertexGroup.CreateRoundedRectangle(geomShape, location + outlineFactor, 
+            size - outlineFactor * 2, foreColor, radius - outlineFactor);
+        var rectOuter = VertexGroup.CreateRoundedRectangle(geomShape, location - outlineFactor,
+            size + outlineFactor * 2, foreColor, radius + outlineFactor);
+        
+        var rectFeatheringInner =
+            VertexGroup.CreateRoundedRectangle(geomShape, location + outlineFactor + 1, 
+                size - outlineFactor * 2 - 2, foreColor.WithAlpha(0), radius - outlineFactor);
+        var rectFeatheringOuter =
+            VertexGroup.CreateRoundedRectangle(geomShape, location - outlineFactor - 1,
+                size + outlineFactor * 2 + 2, foreColor.WithAlpha(0), radius + outlineFactor);
+
+        IndexGroup.ConnectSelfFan(geomShape, rectShadeInner);
+        IndexGroup.ConnectStrip(geomShape, rectShadeInner, rectShadeOuter);
+        
+        IndexGroup.ConnectSelfFan(geomShape, rectBody);
+        IndexGroup.ConnectStrip(geomShape, rectInner, rectOuter);
+        IndexGroup.ConnectStrip(geomShape, rectInner, rectFeatheringInner);
+        IndexGroup.ConnectStrip(geomShape, rectOuter, rectFeatheringOuter);
+        
+        return geomShape;
+    }
+    
+    
 
     public static GeometryShape CreateComplexShape(Point2 location, Color color, int radius)
     {

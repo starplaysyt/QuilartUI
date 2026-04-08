@@ -37,6 +37,7 @@ public class IndexGroup
         
         indexGroup.StartIndex = owner.IndexArray.Length;
         owner.IndexArray.AddSeveral(indices);
+        owner.IndexGroups.Add(indexGroup);
 
         return indexGroup;
     }
@@ -73,6 +74,7 @@ public class IndexGroup
 
         indexGroup.StartIndex = owner.IndexArray.Length;
         owner.IndexArray.AddSeveral(indices);
+        owner.IndexGroups.Add(indexGroup);
         
         return indexGroup;
     }
@@ -107,6 +109,7 @@ public class IndexGroup
         
         indexGroup.StartIndex = owner.IndexArray.Length;
         owner.IndexArray.AddSeveral(indices);
+        owner.IndexGroups.Add(indexGroup);
         
         return indexGroup;
     }
