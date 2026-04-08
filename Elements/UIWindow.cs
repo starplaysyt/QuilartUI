@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using NatLib.Logging;
 using NatLib.Core.Structures;
 using QuilartUI.Controllers;
@@ -48,16 +50,16 @@ public sealed class UIWindow
         Owner.RegisterNewWindow(this);
 
         Logger.LogTrace("Creating renderer...");
-        Renderer = new GraphicsRenderer(this);
-
-        //TODO: Debug only element
-        // DrawingShape = GeometryShape.CreateRoundedRectangle(
-        //     new Point2(100, 100),
-        //     new Size2(200, 400),
-        //     Color.White,
-        //     50);
-        
-        Renderer.RendererColor = Color.FromHex("2c2c2c");
+        Renderer = new GraphicsRenderer(this)
+        {
+            //TODO: Debug only element
+            // DrawingShape = GeometryShape.CreateRoundedRectangle(
+            //     new Point2(100, 100),
+            //     new Size2(200, 400),
+            //     Color.White,
+            //     50);
+            RendererColor = Color.FromHex("2c2c2c")
+        };
 
 
         var color1 = Color.FromHex("f8af40");

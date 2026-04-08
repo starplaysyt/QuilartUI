@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using QuilartUI.Abstractions;
 using static SDL.SDL3;
 using QuilartUI.Controllers;
@@ -14,7 +16,43 @@ public sealed class WindowHandlerService : QuilartService
     private Dictionary<nint, UIWindow> WindowEvents { get; } = [];
     private List<UIWindow> Windows { get; } = [];
     private FrameLimiterService FrameLimiter { get; set; }
-        = ServiceController.Get<FrameLimiterService>();
+
+    private GCHandle _gcHandle;
+    
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+    private static unsafe SDLBool StaticEventWatch(IntPtr ptr, SDL_Event* e)
+    {
+        if (e->Type == SDL_EventType.SDL_EVENT_WINDOW_RESIZED)
+        {
+            var handle = GCHandle.FromIntPtr(ptr);
+            var windowService = (WindowHandlerService)handle.Target!;
+            
+            var window = (nint)SDL_GetWindowFromEvent(e);
+            if (window == IntPtr.Zero) return false;
+
+            windowService.WindowEvents[window].UpdateEvents(e);
+        
+            foreach (var t in windowService.Windows)
+            {
+                t.RenderWindow();
+            }
+
+            return true;
+        }
+        
+        return false;
+    }
+    
+
+    public WindowHandlerService()
+    {
+        _gcHandle = GCHandle.Alloc(this);
+
+        unsafe
+        {
+            SDL_AddEventWatch(&StaticEventWatch, GCHandle.ToIntPtr(_gcHandle));
+        }
+    }
 
     public override void Initialize()
     {
@@ -35,6 +73,11 @@ public sealed class WindowHandlerService : QuilartService
             Logger.LogFatalAndThrow("Failed to initialize MIX", new SDLInitializationException("SDL_mixer"));
 
         Logger.LogTrace("Initializing FrameLimiter...");
+        
+        FrameLimiter = ServiceController.Get<FrameLimiterService>();
+
+        SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+        SDL_SetHint(SDL_HINT_VIDEO_DOUBLE_BUFFER, "1");
 
         Logger.LogTrace("Window Handler initialized successfully.");
     }
@@ -100,6 +143,12 @@ public sealed class WindowHandlerService : QuilartService
     public override void Exit()
     {
         Logger.LogTrace("Service exit called...");
+
+        unsafe
+        {
+            SDL_RemoveEventWatch(&StaticEventWatch, GCHandle.ToIntPtr(_gcHandle));
+            _gcHandle.Free();
+        }
 
         Logger.LogTrace("Quitting all windows...");
 
