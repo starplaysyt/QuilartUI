@@ -4,38 +4,35 @@ namespace QuilartUI.Graphics;
 
 public class IndexGroup
 {
+    public static ConsoleLogger Logger { get; } = LoggerFactory.Create<IndexGroup>();
+    
     public int StartIndex { get; set; } = 0;
 
     public int Length { get; set; } = 0;
 
     public GeometryShape Owner { get; set; }
-
-    public static int GetIndexCount(int vertCount) => 3 * (vertCount - 2);
-
-    public IndexGroup(GeometryShape owner)
+    
+    private IndexGroup(GeometryShape owner)
     {
         Owner = owner;
     }
+    
+    public static int GetIndexCount(int vertCount) => 3 * (vertCount - 2);
 
-    public static IndexGroup ConnectSelfFan(GeometryShape owner, VertexGroup vertGroup1)
+    public static IndexGroup ConnectSelfFan(GeometryShape owner, VertexGroup vertGroup)
     {
-        var logger = LoggerFactory.Create("ConnectSelfFan");
-        logger.LogTrace($"Connecting self-fan for vertex group: {vertGroup1.StartIndex}, {vertGroup1.Length}");
+        Logger.LogTrace($"Connecting self-fan for vertex group: {vertGroup.StartIndex} - {vertGroup.StartIndex + vertGroup.Length}");
         var indexGroup = new IndexGroup(owner);
-        var indexCount = GetIndexCount(vertGroup1.Length);
+        var indexCount = GetIndexCount(vertGroup.Length);
         
         indexGroup.Length = indexCount;
         
         Span<int> indices = stackalloc int[indexCount];
-
-        unsafe
+        for (var i = 0; i < vertGroup.Length - 2; i++)
         {
-            for (var i = 0; i < vertGroup1.Length - 2; i++)
-            {
-                indices[i * 3] = vertGroup1.StartIndex;
-                indices[i * 3 + 1] = vertGroup1.StartIndex + i + 1;
-                indices[i * 3 + 2] = vertGroup1.StartIndex + i + 2;
-            }
+            indices[i * 3] = vertGroup.StartIndex;
+            indices[i * 3 + 1] = vertGroup.StartIndex + i + 1;
+            indices[i * 3 + 2] = vertGroup.StartIndex + i + 2;
         }
         
         indexGroup.StartIndex = owner.IndexArray.Length;
@@ -44,52 +41,75 @@ public class IndexGroup
         return indexGroup;
     }
 
-    public void ConnectSelfStrip(int vertIndex, int vertLength)
+    public static IndexGroup ConnectSelfStrip(GeometryShape owner, VertexGroup vertGroup)
     {
-        var indexCount = GetIndexCount(vertLength);
-        Length = indexCount;
-
-        unsafe
+        var vertLength = vertGroup.Length;
+        var vertIndex = vertGroup.StartIndex;
+        
+        Logger.LogTrace($"Connecting self-strip for vertex group: {vertLength} - {vertIndex + vertLength}");
+        
+        var indexGroup = new IndexGroup(owner);
+        var indexCount = GetIndexCount(vertGroup.Length);
+        
+        indexGroup.Length = indexCount;
+        
+        Span<int> indices = stackalloc int[indexCount];
+        
+        for (var i = 0; i < vertLength - 2; i++)
         {
-            Span<int> startIndex = Span<int>.Empty;// Owner.AllocateIndex(indexCount);
-            // StartIndex = startIndex;
-            
-            for (var i = 0; i < vertLength - 2; i++)
-            {
-                startIndex[i * 3 + 2] = vertIndex + i + 2;
+            indices[i * 3 + 2] = vertIndex + i + 2;
 
-                if (i % 2 == 0)
-                {
-                    startIndex[i * 3] = vertIndex + i;
-                    startIndex[i * 3 + 1] = vertIndex + i + 1;
-                }
-                else
-                {
-                    startIndex[i * 3] = vertLength + i + 1;
-                    startIndex[i * 3 + 1] = vertLength + i;
-                }
+            if (i % 2 == 0)
+            {
+                indices[i * 3] = vertIndex + i;
+                indices[i * 3 + 1] = vertIndex + i + 1;
+            }
+            else
+            {
+                indices[i * 3] = vertLength + i + 1;
+                indices[i * 3 + 1] = vertLength + i;
             }
         }
+
+        indexGroup.StartIndex = owner.IndexArray.Length;
+        owner.IndexArray.AddSeveral(indices);
+        
+        return indexGroup;
     }
 
-    public void ConnectStrip(int firstIndex, int firstLength, int secondIndex, int secondLength)
+    public static IndexGroup ConnectStrip(GeometryShape owner, VertexGroup group1, VertexGroup group2)
     {
-        // var length = int.Min(firstLength, secondLength);
-        // var lastIndex = 0;
-        //
-        // unsafe
-        // {
-        //     var pointer = StartIndex;
-        //     for (var i = 0; i < length - 1; i++)
-        //     {
-        //         pointer[lastIndex++] = firstIndex + i;
-        //         pointer[lastIndex++] = firstIndex + i + 1;
-        //         pointer[lastIndex++] = secondIndex + i + 1;
-        //
-        //         pointer[lastIndex++] = secondIndex + i;
-        //         pointer[lastIndex++] = firstIndex + i;
-        //         pointer[lastIndex++] = secondIndex + i + 1;
-        //     }
-        // }
+        var vert1Length = group1.Length; var vert1Index = group1.StartIndex;
+        var vert2Length = group2.Length; var vert2Index = group2.StartIndex;
+        
+        Logger.LogTrace($"Connecting strip for vertex groups: {vert1Index} - {vert1Index + vert1Length} with {vert2Index} - {vert2Length}");
+
+        var indexGroup = new IndexGroup(owner);
+        var minVertLength = Math.Min(vert1Length, vert2Length);
+        var indexCount = GetIndexCount(minVertLength * 2);
+        
+        indexGroup.Length = indexCount;
+        
+        Span<int> indices = stackalloc int[indexCount];
+
+        Logger.LogTrace($"INFO: indexCount: {indexCount} vertLength: {minVertLength}");
+        var lastIndex = 0;
+        for (var i = 0; i < minVertLength - 1; i++)
+        {
+            indices[lastIndex++] = vert1Index + i;
+            indices[lastIndex++] = vert1Index + i + 1;
+            indices[lastIndex++] = vert2Index + i + 1;
+        
+            indices[lastIndex++] = vert2Index + i;
+            indices[lastIndex++] = vert1Index + i;
+            indices[lastIndex++] = vert2Index + i + 1;
+        }
+        
+        indexGroup.StartIndex = owner.IndexArray.Length;
+        owner.IndexArray.AddSeveral(indices);
+        
+        return indexGroup;
     }
+
+    
 }

@@ -13,6 +13,8 @@ public sealed class GeometryShape
     public PointerList<int> IndexArray { get; set; }
 
     public List<VertexGroup> VertexGroups { get; private set; } = [];
+    
+    public List<IndexGroup> IndexGroups { get; private set; } = [];
 
     public GeometryShape(int vertexCount, int indexCount)
     {
@@ -87,10 +89,15 @@ public sealed class GeometryShape
         
         var arcQuality = quality / 4;
         
+        var da = 2.0f * MathF.PI / (quality - 4);
+        
         for (var i = 0; i <= quality; i++)
         {
             var cornerIdx = i / arcQuality;
-            vertices[i].Position = position + centersSpan[cornerIdx] + GetCirclePoint(i - cornerIdx, radius, quality - 4);
+            var angle = da * i - cornerIdx;
+
+            vertices[i].Position =
+                position + centersSpan[cornerIdx] + GetCirclePoint(i - cornerIdx, radius, quality - 4);
             vertices[i].Color = color;
         }
     }
@@ -197,25 +204,77 @@ public sealed class GeometryShape
 
     public static int GetIndicesLength(int vertCount) => 3 * (vertCount - 2);
 
+    public static GeometryShape CreateCircle(Point2 center, Color color, float radius)
+    {
+        Logger.LogTrace("Creating circle shape...");
+        var geomShape = new GeometryShape();
+
+        var circleBody = VertexGroup.CreateCircle(geomShape, center, color, radius);
+        
+        geomShape.VertexGroups.Add(circleBody);
+
+        var circleFill = IndexGroup.ConnectSelfFan(geomShape, circleBody);
+        
+        geomShape.IndexGroups.Add(circleFill);
+        
+        return geomShape;
+    }
+
     public static GeometryShape CreateComplexShape(Point2 location, Color color, int radius)
     {
         Logger.LogTrace("Creating complex shape...");
         var geomShape = new GeometryShape();
+        //
+        // Logger.LogTrace("Creating vertex groups...");
+        // var vertGroup1 = VertexGroup.CreateCircle(geomShape, location - new Point2(50, 50), color.WithR(0.8f).WithAlpha(0.5f), radius);
+        // var vertGroup2 = VertexGroup.CreateCircle(geomShape, location + new Point2(50, 50), color.WithR(0.1f).WithAlpha(0.5f), radius);
+        // var vertGroup3 = VertexGroup.CreateCircle(geomShape, location + new Point2(0, 50), color.WithR(0.9f).WithAlpha(0.5f), radius);
+        //
+        // geomShape.VertexGroups.Add(vertGroup1);
+        // geomShape.VertexGroups.Add(vertGroup2);
+        // geomShape.VertexGroups.Add(vertGroup3);
+        //
+        // Logger.LogTrace("Creating index groups...");
+        //
+        // var indexGroup1 = IndexGroup.ConnectSelfFan(geomShape, vertGroup1);
+        // var indexGroup2 = IndexGroup.ConnectSelfStrip(geomShape, vertGroup2);
+        // var indexGroup3 = IndexGroup.ConnectStrip(geomShape, vertGroup3, vertGroup1);
+        //
+        // geomShape.IndexGroups.Add(indexGroup1);
+        // geomShape.IndexGroups.Add(indexGroup2);
+        // geomShape.IndexGroups.Add(indexGroup3);
+
+        var outerFeathering = VertexGroup.CreateCircle(geomShape, location, color.WithAlpha(0), radius + 1f);
+        var circleOuter = VertexGroup.CreateCircle(geomShape, location, color, radius);
+        var circleInner = VertexGroup.CreateCircle(geomShape, location, color, radius - 10);
+        var innerFeathering = VertexGroup.CreateCircle(geomShape, location, color.WithAlpha(0), radius - 10 - 1f);
         
-        Logger.LogTrace("Creating vertex groups...");
-        var vertGroup1 = VertexGroup.CreateCircle(geomShape, location - new Point2(50, 50), color.WithR(0.8f).WithAlpha(0.5f), radius);
-        var vertGroup2 = VertexGroup.CreateCircle(geomShape, location + new Point2(50, 50), color.WithR(0.1f).WithAlpha(0.5f), radius);
-        var vertGroup3 = VertexGroup.CreateCircle(geomShape, location + new Point2(0, 50), color.WithR(0.9f).WithAlpha(0.5f), radius);
+        geomShape.VertexGroups.Add(outerFeathering);
+        geomShape.VertexGroups.Add(circleOuter);
+        geomShape.VertexGroups.Add(circleInner);
+        geomShape.VertexGroups.Add(innerFeathering);
         
-        geomShape.VertexGroups.Add(vertGroup1);
-        geomShape.VertexGroups.Add(vertGroup2);
-        geomShape.VertexGroups.Add(vertGroup3);
+        // var vertexGroup1 = VertexGroup.CreateCircle(geomShape, location, color, radius);
+        // var vertexGroup2 = VertexGroup.CreateCircle(geomShape, location, color.WithAlpha(0), radius + 5);
+        // var vertexGroup3 = VertexGroup.CreateRoundedRectangle(geomShape, location, new Size2(500, 500), color, 20);
+        //
+        // geomShape.VertexGroups.Add(vertexGroup1);
+        // geomShape.VertexGroups.Add(vertexGroup2);
+        // geomShape.VertexGroups.Add(vertexGroup3);
+
+        var featheringOuterConnection = IndexGroup.ConnectStrip(geomShape, outerFeathering, circleOuter);
+        var outerInnerConnection = IndexGroup.ConnectStrip(geomShape, circleOuter, circleInner);
+        var innerFeatheringConnection = IndexGroup.ConnectStrip(geomShape, circleInner, innerFeathering);
         
-        Logger.LogTrace("Creating index groups...");
+        geomShape.IndexGroups.Add(featheringOuterConnection);
+        geomShape.IndexGroups.Add(outerInnerConnection);
+        geomShape.IndexGroups.Add(innerFeatheringConnection);
         
-        var indexGroup1 = IndexGroup.ConnectSelfFan(geomShape, vertGroup1);
-        var indexGroup2 = IndexGroup.ConnectSelfFan(geomShape, vertGroup2);
-        var indexGroup3 = IndexGroup.ConnectSelfFan(geomShape, vertGroup3);
+        // var indexGroup = IndexGroup.ConnectStrip(geomShape, vertexGroup1, vertexGroup2);
+        // var indexGroup2 = IndexGroup.ConnectSelfFan(geomShape, vertexGroup3);
+        //
+        // geomShape.IndexGroups.Add(indexGroup);
+        // geomShape.IndexGroups.Add(indexGroup2);
         
         return geomShape;
     }

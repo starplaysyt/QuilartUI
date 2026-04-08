@@ -57,7 +57,7 @@ public sealed class UIWindow
         //     Color.White,
         //     50);
 
-        DrawingShape = GeometryShape.CreateComplexShape(new Point2(300, 300), new Color(0.2f, 0.9f, 0.2f, 0.5f), 30);
+        DrawingShape = GeometryShape.CreateComplexShape(new Point2(300, 300), new Color(0.2f, 0.9f, 0.2f, 0.5f), 90);
 
         // var circleColor = Color.Magenta;
         // DrawingShape2 = GeometryShape.CreateCircle(
