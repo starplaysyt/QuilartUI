@@ -120,49 +120,60 @@ public class IndexGroup
 
     public static IndexGroup ConnectStripExtra(GeometryShape owner, VertexGroup group1, VertexGroup group2)
     {
-        var vert1Length = group1.Length;
-        var vert1Index = group1.StartIndex;
-        var vert2Length = group2.Length;
-        var vert2Index = group2.StartIndex;
-
-        var minVertLength = Math.Max(vert1Length, vert2Length);
-
-        var incrementFactor1 = (float)vert1Length / minVertLength;
-        var incrementFactor2 = (float)vert2Length / minVertLength;
-
-        Logger.LogTrace(
-            $"Connecting strip for vertex groups: {vert1Index} - {vert1Index + vert1Length} with {vert2Index} - {vert2Index + vert2Length}");
-        Logger.LogTrace($"IncrementFactor1 : {incrementFactor1} IncrementFactor2 : {incrementFactor2}");
-
-        var indexGroup = new IndexGroup(owner);
-
-        var indexCount = GetIndexCount(minVertLength * 2);
-
-        indexGroup.Length = indexCount;
-
+        var (vert1Index, vert1Length) = (group1.StartIndex, group1.Length);
+        var (vert2Index, vert2Length) = (group2.StartIndex, group2.Length);
+        
+        var indexCount = (vert1Length + vert2Length - 2) * 3;
         Span<int> indices = stackalloc int[indexCount];
+        var lastIndex = 0;
+        var triangleCount = vert1Length + vert2Length - 2;
+        
+        // var step1 = vert1Length > 1 ? 1f / (vert1Length - 1) : 2f;
+        // var step2 = vert2Length > 1 ? 1f / (vert2Length - 1) : 2f;
 
-        Logger.LogTrace($"INFO: indexCount: {indexCount} vertLength: {minVertLength}");
-        var lastIndex = 0; //in core array
-
-        for (float i1 = 0, i2 = 0;
-             i1 < vert1Length - 1 || i2 < vert2Length - 1;
-             i1 += incrementFactor1, i2 += incrementFactor2)
+        var step1 = 1f / (vert1Length - 1);
+        var step2 = 1f / (vert2Length - 1);
+        
+        float norm1 = 0f, norm2 = 0f;
+        int currI1 = 0, currI2 = 0;
+        
+        Logger.LogTrace($"Connecting strip for vertex groups: {vert1Index} - {vert1Index + vert1Length} " +
+                        $"with {vert2Index} - {vert2Index + vert2Length}");
+        
+        for (var step = 0; step < triangleCount; step++)
         {
-            Logger.LogTrace($"INFO: i1: {i1} i2: {i2} lastIndex: {lastIndex}");
-            var actI1 = (int)i1;
-            var actI2 = (int)i2;
-
-            indices[lastIndex++] = vert1Index + actI1;
-            indices[lastIndex++] = vert1Index + actI1 + 1;
-            indices[lastIndex++] = vert2Index + actI2 + 1;
-
-            indices[lastIndex++] = vert2Index + actI2;
-            indices[lastIndex++] = vert1Index + actI1;
-            indices[lastIndex++] = vert2Index + actI2 + 1;
+            if (norm1 <= norm2 && currI1 < vert1Length - 1)
+            {
+                indices[lastIndex++] = vert1Index + currI1;
+                indices[lastIndex++] = vert1Index + currI1 + 1;
+                indices[lastIndex++] = vert2Index + currI2;
+        
+                currI1++;
+                norm1 += step1;
+            }
+            else
+            {
+                indices[lastIndex++] = vert1Index + currI1;
+                indices[lastIndex++] = vert2Index + currI2 + 1;
+                indices[lastIndex++] = vert2Index + currI2;
+        
+                currI2++;
+                norm2 += step2;
+            }
         }
 
-        indexGroup.StartIndex = owner.IndexArray.Length;
+        // for (int i = 0; i < indexCount; i++)
+        // {
+        //     Console.Write(" " + i);
+        //     
+        //     if (i % 3 == 0) Console.Write('|');
+        // }
+
+        var indexGroup = new IndexGroup(owner)
+        {
+            Length = indexCount,
+            StartIndex = owner.IndexArray.Length
+        };
         owner.IndexArray.AddSeveral(indices);
         owner.IndexGroups.Add(indexGroup);
 
