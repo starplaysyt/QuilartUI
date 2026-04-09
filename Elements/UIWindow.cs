@@ -66,7 +66,10 @@ public sealed class UIWindow
         var color2 = Color.FromHex("1c323c");
 
         DrawingShape =
-            GeometryShape.CreateRectangleBackgroundShaded(new Point2(200, 200), new Size2(600, 500), color2, color1, 20, 20); 
+            GeometryShape.CreateRectangleOutlineAuto(new Point2(200, 200), new Size2(600, 500), color1, 100,
+                20);
+            
+        //GeometryShape.CreateRectangleBackgroundShaded(new Point2(200, 200), new Size2(600, 500), color2, color1, 100, 20); 
             
         //GeometryShape.CreateRectangleOutline(new Point2(200, 200), new Size2(600, 500), color1, 20, 20); 
             

@@ -301,6 +301,34 @@ public sealed class GeometryShape
         return geomShape;
     }
     
+    public static GeometryShape CreateRectangleOutlineAuto(Point2 location, Size2 size, Color color, float radius,
+        float outlineWidth)
+    {
+        Logger.LogTrace("Creating rectangle with outline shape...");
+        var geomShape = new GeometryShape();
+        
+        var outlineFactor = outlineWidth / 2;
+        
+        var rectInner = VertexGroup.CreateRoundedRectangleAuto(geomShape, location + outlineFactor, 
+            size - outlineFactor * 2, color, radius - outlineFactor);
+        
+        var rectOuter = VertexGroup.CreateRoundedRectangleAuto(geomShape, location - outlineFactor,
+            size + outlineFactor * 2, color, radius + outlineFactor);
+        
+        var rectFeatheringInner =
+            VertexGroup.CreateRoundedRectangleAuto(geomShape, location + outlineFactor + 1, 
+                size - outlineFactor * 2 - 2, color.WithAlpha(0), radius - outlineFactor);
+        var rectFeatheringOuter =
+            VertexGroup.CreateRoundedRectangleAuto(geomShape, location - outlineFactor - 1,
+                size + outlineFactor * 2 + 2, color.WithAlpha(0), radius + outlineFactor);
+        
+        IndexGroup.ConnectStripExtra(geomShape, rectInner, rectOuter);
+        IndexGroup.ConnectStripExtra(geomShape, rectInner, rectFeatheringInner);
+        IndexGroup.ConnectStripExtra(geomShape, rectOuter, rectFeatheringOuter);
+        
+        return geomShape;
+    }
+    
     public static GeometryShape CreateRectangleBackground(Point2 location, Size2 size, Color backColor, Color foreColor, float radius,
         float outlineWidth)
     {
