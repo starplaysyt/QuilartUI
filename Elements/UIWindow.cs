@@ -26,8 +26,9 @@ public sealed class UIWindow
     public GraphicsRenderer Renderer { get; }
 
     //TODO: Debug only element
-    public GeometryShape DrawingShape { get; }
-    public GeometryShape DrawingShape2 { get; }
+    public List<GeometryShape> Shapes { get; } = new();
+    
+    public FrameCounterService FrameCounter { get; }
 
     public UIWindow()
     {
@@ -37,6 +38,7 @@ public sealed class UIWindow
 
         Logger.LogTrace("Getting WindowHandlerService...");
         Owner = ServiceController.Get<WindowHandlerService>();
+        FrameCounter = ServiceController.Get<FrameCounterService>();
 
         Logger.LogTrace("Creating SDLWindow...");
         unsafe
@@ -65,9 +67,17 @@ public sealed class UIWindow
         var color1 = Color.FromHex("f8af40");
         var color2 = Color.FromHex("1c323c");
 
-        DrawingShape =
-            GeometryShape.CreateRectangleOutlineAuto(new Point2(50, 50), new Size2(100, 50), color1, 10,
-                5);
+        for (int i = 0; i < 20; i++)
+        {
+            for (int j = 0; j < 8; j++)
+            {
+                var shape = GeometryShape.CreateRectangle(new Point2(10 + j * 310, 10 + i * 60), new Size2(300, 50),
+                    color2, 20,
+                    5, color1);
+                Shapes.Add(shape);
+                Console.WriteLine(shape.IndexArray.Length);
+            }
+        }
             
         //GeometryShape.CreateRectangleBackgroundShaded(new Point2(200, 200), new Size2(600, 500), color2, color1, 100, 20); 
             
@@ -111,9 +121,20 @@ public sealed class UIWindow
 
     internal unsafe void RenderWindow()
     {
+        bool isUpdated = FrameCounter.Tick();
+        
         Renderer.RenderClear();
-        Renderer.DrawGeometryShape(DrawingShape);
+        foreach (var shape in Shapes)
+        {
+            Renderer.DrawGeometryShape(shape);
+        }
         // Renderer.DrawGeometryShape(DrawingShape2);
+
+        unsafe
+        {
+            SDL_RenderDebugText((SDL_Renderer*)Renderer.RendererPtr, 10, 10, FrameCounter.CurrentFps.ToString());
+        }
+        
         Renderer.RenderPresent();
     }
 

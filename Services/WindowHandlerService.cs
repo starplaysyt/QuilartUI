@@ -16,6 +16,7 @@ public sealed class WindowHandlerService : QuilartService
     private Dictionary<nint, UIWindow> WindowEvents { get; } = [];
     private List<UIWindow> Windows { get; } = [];
     private FrameLimiterService FrameLimiter { get; set; }
+    private FrameCounterService FrameCounter { get; set; }
 
     private GCHandle _gcHandle;
     
@@ -75,6 +76,7 @@ public sealed class WindowHandlerService : QuilartService
         Logger.LogTrace("Initializing FrameLimiter...");
         
         FrameLimiter = ServiceController.Get<FrameLimiterService>();
+        FrameCounter = ServiceController.Get<FrameCounterService>();
 
         SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
         SDL_SetHint(SDL_HINT_VIDEO_DOUBLE_BUFFER, "1");
@@ -117,7 +119,7 @@ public sealed class WindowHandlerService : QuilartService
             while (Windows.Count > 0)
             {
                 if (!IsRunning) break;
-
+                
                 while (SDL_PollEvent(&e))
                 {
                     var window = (nint)SDL_GetWindowFromEvent(&e);
@@ -131,7 +133,7 @@ public sealed class WindowHandlerService : QuilartService
                     t.RenderWindow();
                 }
 
-                FrameLimiter.Wait();
+                // FrameLimiter.Wait();
             }
         }
 
