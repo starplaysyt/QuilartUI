@@ -33,7 +33,7 @@ public sealed class GraphicsRenderer
     {
         unsafe
         {
-            Renderer = SDL_CreateRenderer((SDL_Window*)window.WindowPtr, (byte*)null);
+            Renderer = SDL_CreateRenderer((SDL_Window*)window.WindowPtr, "opengl");
 
             if (Renderer == null)
                 throw new SDLOperationException();

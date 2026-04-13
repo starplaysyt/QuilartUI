@@ -21,10 +21,11 @@ public class IndexGroup
 
     public static IndexGroup ConnectFan(GeometryShape owner, VertexGroup vertGroup)
     {
-        Logger.LogTrace(
-            $"Connecting self-fan for vertex group: {vertGroup.StartIndex} - {vertGroup.StartIndex + vertGroup.Length}");
         var indexGroup = new IndexGroup(owner);
         var indexCount = GetIndexCount(vertGroup.Length);
+        
+        Logger.LogTrace(
+            $"Connecting self-fan for vertex group: {vertGroup.StartIndex} - {vertGroup.StartIndex + vertGroup.Length}. Index group count: {indexCount}.");
 
         indexGroup.Length = indexCount;
 
@@ -60,7 +61,7 @@ public class IndexGroup
         int currI1 = 0, currI2 = 0;
         
         Logger.LogTrace($"Connecting strip for vertex groups: {vert1Index} - {vert1Index + vert1Length} " +
-                        $"with {vert2Index} - {vert2Index + vert2Length}");
+                        $"with {vert2Index} - {vert2Index + vert2Length}. Index group count: {indexCount}.");
         
         for (var step = 0; step < triangleCount; step++)
         {

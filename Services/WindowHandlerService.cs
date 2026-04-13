@@ -19,7 +19,7 @@ public sealed class WindowHandlerService : QuilartService
     private FrameCounterService FrameCounter { get; set; }
 
     private GCHandle _gcHandle;
-    
+
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     private static unsafe SDLBool StaticEventWatch(IntPtr ptr, SDL_Event* e)
     {
@@ -27,12 +27,12 @@ public sealed class WindowHandlerService : QuilartService
         {
             var handle = GCHandle.FromIntPtr(ptr);
             var windowService = (WindowHandlerService)handle.Target!;
-            
+
             var window = (nint)SDL_GetWindowFromEvent(e);
             if (window == IntPtr.Zero) return false;
 
             windowService.WindowEvents[window].UpdateEvents(e);
-        
+
             foreach (var t in windowService.Windows)
             {
                 t.RenderWindow();
@@ -40,10 +40,10 @@ public sealed class WindowHandlerService : QuilartService
 
             return true;
         }
-        
+
         return false;
     }
-    
+
 
     public WindowHandlerService()
     {
@@ -74,7 +74,7 @@ public sealed class WindowHandlerService : QuilartService
             Logger.LogFatalAndThrow("Failed to initialize MIX", new SDLInitializationException("SDL_mixer"));
 
         Logger.LogTrace("Initializing FrameLimiter...");
-        
+
         FrameLimiter = ServiceController.Get<FrameLimiterService>();
         FrameCounter = ServiceController.Get<FrameCounterService>();
 
@@ -119,7 +119,7 @@ public sealed class WindowHandlerService : QuilartService
             while (Windows.Count > 0)
             {
                 if (!IsRunning) break;
-                
+
                 while (SDL_PollEvent(&e))
                 {
                     var window = (nint)SDL_GetWindowFromEvent(&e);
@@ -133,7 +133,7 @@ public sealed class WindowHandlerService : QuilartService
                     t.RenderWindow();
                 }
 
-                // FrameLimiter.Wait();
+                FrameLimiter.Wait();
             }
         }
 

@@ -27,7 +27,7 @@ public sealed class UIWindow
 
     //TODO: Debug only element
     public List<GeometryShape> Shapes { get; } = new();
-    
+
     public FrameCounterService FrameCounter { get; }
 
     public UIWindow()
@@ -44,7 +44,7 @@ public sealed class UIWindow
         unsafe
         {
             SDLWindow = Logger.LogSDLIfNullPtr(SDL_CreateWindow("Quilart Window", 1200, 700,
-                SDL_WindowFlags.SDL_WINDOW_RESIZABLE | SDL_WindowFlags.SDL_WINDOW_HIGH_PIXEL_DENSITY));
+                SDL_WindowFlags.SDL_WINDOW_RESIZABLE));
             Id = (uint)SDL_GetWindowID(SDLWindow);
         }
 
@@ -67,6 +67,9 @@ public sealed class UIWindow
         var color1 = Color.FromHex("f8af40");
         var color2 = Color.FromHex("1c323c");
 
+        Console.WriteLine("BEFORE ACQUIRING BUFFERS");
+        Console.ReadKey();
+
         for (int i = 0; i < 20; i++)
         {
             for (int j = 0; j < 8; j++)
@@ -78,13 +81,18 @@ public sealed class UIWindow
                 Console.WriteLine(shape.IndexArray.Length);
             }
         }
-            
+
+        //Shapes.Add(GeometryShape.CreateMultipleRectangles());
+
+        Console.WriteLine("AFTER ACQUIRING BUFFERS");
+        Console.ReadKey();
+
         //GeometryShape.CreateRectangleBackgroundShaded(new Point2(200, 200), new Size2(600, 500), color2, color1, 100, 20); 
-            
+
         //GeometryShape.CreateRectangleOutline(new Point2(200, 200), new Size2(600, 500), color1, 20, 20); 
-            
+
         //GeometryShape.CreateRectangle(new Point2(200, 200), new Size2(200, 100), color2, 20);
-            
+
         //GeometryShape.CreateCircleBackground(new Point2(300, 300), color1.WithAlpha(0.6f), color2.WithAlpha(0.6f), 200, 10);
 
         // var circleColor = Color.Magenta;
@@ -121,21 +129,32 @@ public sealed class UIWindow
 
     internal unsafe void RenderWindow()
     {
-        bool isUpdated = FrameCounter.Tick();
+        // Console.WriteLine("BEFORE RENDERING");
+        // Console.ReadKey();
         
+        bool isUpdated = FrameCounter.Tick();
+
         Renderer.RenderClear();
+        // Renderer.DrawGeometryShape(Shapes[0]);
+
         foreach (var shape in Shapes)
         {
             Renderer.DrawGeometryShape(shape);
         }
         // Renderer.DrawGeometryShape(DrawingShape2);
+        
+        // Console.WriteLine("AFTER DRAW GEOMETRY SHAPE");
+        // Console.ReadKey();
 
         unsafe
         {
             SDL_RenderDebugText((SDL_Renderer*)Renderer.RendererPtr, 10, 10, FrameCounter.CurrentFps.ToString());
         }
-        
+
         Renderer.RenderPresent();
+        
+        // Console.WriteLine("AFTER RENDERING");
+        // Console.ReadKey();
     }
 
     public void QuitWindow()
