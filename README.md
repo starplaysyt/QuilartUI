@@ -9,7 +9,7 @@
 
 **QuilartUI** is a lightweight, cross-platform declarative UI library with an SDL3 backend.
 
-## CURRENTLY UNDER DEVELOPMENT, SO NO DESCRIPTION PROVIDED YET
+## Development has been halted due to the need to implement a wrapper over the SDL GPU API to achieve reasonable performance and avoid memory loss out of the blue. Fuck that.
 
 ## License
 
